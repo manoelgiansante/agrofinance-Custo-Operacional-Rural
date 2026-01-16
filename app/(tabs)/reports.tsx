@@ -1,12 +1,14 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Lock, Crown } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function ReportsScreen() {
-  const { expenses, operations } = useApp();
+  const router = useRouter();
+  const { expenses, operations, isPremiumFeature } = useApp();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   const monthlyData = useMemo(() => {
@@ -74,6 +76,59 @@ export default function ReportsScreen() {
   };
 
   const maxTotal = Math.max(...monthlyData.operationTotals.map(item => item.total), 1);
+
+  if (isPremiumFeature('reports')) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Relatórios</Text>
+        </View>
+
+        <View style={styles.lockedContainer}>
+          <View style={styles.lockedIcon}>
+            <Lock size={32} color={colors.primary} />
+          </View>
+          <Text style={styles.lockedTitle}>Relatórios Premium</Text>
+          <Text style={styles.lockedDescription}>
+            Desbloqueie relatórios detalhados para acompanhar seus gastos por operação, mês e categoria.
+          </Text>
+          <View style={styles.featuresList}>
+            <View style={styles.featureItem}>
+              <View style={styles.featureCheck}>
+                <Crown size={12} color={colors.primary} />
+              </View>
+              <Text style={styles.featureText}>Relatórios mensais detalhados</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <View style={styles.featureCheck}>
+                <Crown size={12} color={colors.primary} />
+              </View>
+              <Text style={styles.featureText}>Comparativo entre meses</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <View style={styles.featureCheck}>
+                <Crown size={12} color={colors.primary} />
+              </View>
+              <Text style={styles.featureText}>Distribuição por operação</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <View style={styles.featureCheck}>
+                <Crown size={12} color={colors.primary} />
+              </View>
+              <Text style={styles.featureText}>Gráficos e visualizações</Text>
+            </View>
+          </View>
+          <TouchableOpacity 
+            style={styles.upgradeButton}
+            onPress={() => router.push('/subscription')}
+          >
+            <Crown size={18} color={colors.textLight} />
+            <Text style={styles.upgradeButtonText}>Ver Planos</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -238,6 +293,71 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     letterSpacing: -0.5,
+  },
+  lockedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  lockedIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  lockedTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  lockedDescription: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  featuresList: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 16,
+  },
+  featureCheck: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  featureText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  upgradeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textLight,
   },
   monthSelector: {
     flexDirection: 'row',

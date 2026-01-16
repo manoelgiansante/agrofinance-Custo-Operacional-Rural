@@ -10,33 +10,6 @@ export const defaultOperations: Operation[] = [
     isActive: true,
     createdAt: '2024-01-01',
   },
-  {
-    id: '2',
-    name: 'Cana-de-Açúcar',
-    description: 'Plantio e colheita de cana',
-    color: '#228B22',
-    icon: 'Wheat',
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-  {
-    id: '3',
-    name: 'Compostagem',
-    description: 'Produção de composto orgânico',
-    color: '#6B4423',
-    icon: 'Leaf',
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
-  {
-    id: '4',
-    name: 'Sede / Particular',
-    description: 'Despesas da sede e particulares',
-    color: '#4A90A4',
-    icon: 'Home',
-    isActive: true,
-    createdAt: '2024-01-01',
-  },
 ];
 
 export const expenseCategories: ExpenseCategory[] = [
@@ -140,6 +113,19 @@ export const mockExpenses: Expense[] = [
 ];
 
 export const subscriptionPlans: SubscriptionPlan[] = [
+  {
+    id: 'free',
+    name: 'Gratuito',
+    price: 0,
+    features: [
+      '1 operação',
+      '1 usuário',
+      'Lançamento de despesas',
+      'Visualização básica',
+    ],
+    operationsLimit: 1,
+    usersLimit: 1,
+  },
   {
     id: 'starter',
     name: 'Inicial',

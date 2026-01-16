@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { X, Check } from 'lucide-react-native';
+import { X, Check, Lock, Crown } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
@@ -13,7 +13,7 @@ const OPERATION_COLORS = [
 
 export default function AddOperationScreen() {
   const router = useRouter();
-  const { addOperation } = useApp();
+  const { addOperation, canAddOperation, currentPlan } = useApp();
   
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -35,6 +35,40 @@ export default function AddOperationScreen() {
 
     router.back();
   };
+
+  if (!canAddOperation) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <X size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.title}>Nova Operação</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+        
+        <View style={styles.lockedContainer}>
+          <View style={styles.lockedIcon}>
+            <Lock size={32} color={colors.primary} />
+          </View>
+          <Text style={styles.lockedTitle}>Limite de Operações</Text>
+          <Text style={styles.lockedDescription}>
+            Seu plano {currentPlan.name} permite apenas {currentPlan.operationsLimit} operação{currentPlan.operationsLimit > 1 ? 'ões' : ''}.
+          </Text>
+          <Text style={styles.lockedSubtext}>
+            Faça upgrade para adicionar mais operações e gerenciar múltiplas atividades da sua fazenda.
+          </Text>
+          <TouchableOpacity 
+            style={styles.upgradeButton}
+            onPress={() => router.push('/subscription')}
+          >
+            <Crown size={18} color={colors.textLight} />
+            <Text style={styles.upgradeButtonText}>Ver Planos</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -124,6 +158,9 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderLight,
     backgroundColor: colors.surface,
   },
+  headerSpacer: {
+    width: 60,
+  },
   closeButton: {
     padding: 4,
   },
@@ -146,6 +183,54 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+  },
+  lockedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  lockedIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  lockedTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  lockedDescription: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  lockedSubtext: {
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  upgradeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textLight,
   },
   preview: {
     alignItems: 'center',

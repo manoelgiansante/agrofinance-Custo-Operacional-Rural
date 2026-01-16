@@ -2,27 +2,58 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { Operation, Expense } from '@/types';
-import { defaultOperations, mockExpenses } from '@/mocks/data';
+import { defaultOperations, mockExpenses, subscriptionPlans } from '@/mocks/data';
 
 const STORAGE_KEYS = {
   OPERATIONS: '@agrofinance_operations',
   EXPENSES: '@agrofinance_expenses',
+  SUBSCRIPTION: '@agrofinance_subscription',
 };
 
 export const [AppProvider, useApp] = createContextHook(() => {
   const [operations, setOperations] = useState<Operation[]>(defaultOperations);
   const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPlanId, setCurrentPlanId] = useState<string>('free');
+
+  const currentPlan = useMemo(() => {
+    return subscriptionPlans.find(p => p.id === currentPlanId) || subscriptionPlans[0];
+  }, [currentPlanId]);
+
+  const canAddOperation = useMemo(() => {
+    if (currentPlan.operationsLimit === -1) return true;
+    return operations.length < currentPlan.operationsLimit;
+  }, [operations.length, currentPlan]);
+
+  const isPremiumFeature = useCallback((feature: 'reports' | 'export' | 'verification' | 'multiUser') => {
+    if (currentPlanId === 'free') {
+      return true;
+    }
+    if (currentPlanId === 'starter') {
+      return feature === 'export' || feature === 'multiUser';
+    }
+    return false;
+  }, [currentPlanId]);
 
   useEffect(() => {
     loadData();
   }, []);
 
+  const upgradePlan = useCallback(async (planId: string) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.SUBSCRIPTION, planId);
+      setCurrentPlanId(planId);
+    } catch (error) {
+      console.log('Error saving subscription:', error);
+    }
+  }, []);
+
   const loadData = async () => {
     try {
-      const [storedOperations, storedExpenses] = await Promise.all([
+      const [storedOperations, storedExpenses, storedSubscription] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.OPERATIONS),
         AsyncStorage.getItem(STORAGE_KEYS.EXPENSES),
+        AsyncStorage.getItem(STORAGE_KEYS.SUBSCRIPTION),
       ]);
 
       if (storedOperations) {
@@ -30,6 +61,9 @@ export const [AppProvider, useApp] = createContextHook(() => {
       }
       if (storedExpenses) {
         setExpenses(JSON.parse(storedExpenses));
+      }
+      if (storedSubscription) {
+        setCurrentPlanId(storedSubscription);
       }
     } catch (error) {
       console.log('Error loading data:', error);
@@ -153,5 +187,10 @@ export const [AppProvider, useApp] = createContextHook(() => {
     getPendingVerification,
     getTotalByOperation,
     getMonthlyTotal,
+    currentPlan,
+    currentPlanId,
+    canAddOperation,
+    isPremiumFeature,
+    upgradePlan,
   };
 });

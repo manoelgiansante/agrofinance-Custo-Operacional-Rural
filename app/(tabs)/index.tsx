@@ -8,14 +8,16 @@ import {
   ChevronRight,
   Wallet,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Crown,
+  Sparkles
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { operations, expenses, getMonthlyTotal } = useApp();
+  const { operations, expenses, getMonthlyTotal, currentPlanId, currentPlan } = useApp();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(() => {
@@ -120,9 +122,32 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         )}
 
+        {currentPlanId === 'free' && (
+          <TouchableOpacity 
+            style={styles.upgradeBanner}
+            onPress={() => router.push('/subscription')}
+          >
+            <View style={styles.upgradeBannerIcon}>
+              <Sparkles size={20} color={colors.accent} />
+            </View>
+            <View style={styles.upgradeBannerContent}>
+              <Text style={styles.upgradeBannerTitle}>Desbloqueie mais recursos</Text>
+              <Text style={styles.upgradeBannerText}>Adicione mais operações e acesse relatórios</Text>
+            </View>
+            <Crown size={18} color={colors.accent} />
+          </TouchableOpacity>
+        )}
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Operações</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Operações</Text>
+              {currentPlanId === 'free' && (
+                <View style={styles.limitBadge}>
+                  <Text style={styles.limitBadgeText}>{operations.length}/{currentPlan.operationsLimit}</Text>
+                </View>
+              )}
+            </View>
             <TouchableOpacity onPress={() => router.push('/add-operation')}>
               <Text style={styles.sectionLink}>+ Nova</Text>
             </TouchableOpacity>
@@ -330,17 +355,66 @@ const styles = StyleSheet.create({
     marginTop: 32,
     paddingHorizontal: 24,
   },
+  upgradeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 24,
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: colors.accent + '10',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.accent + '30',
+  },
+  upgradeBannerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.accent + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  upgradeBannerContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  upgradeBannerTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  upgradeBannerText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '600',
     color: colors.text,
     letterSpacing: -0.2,
+  },
+  limitBadge: {
+    backgroundColor: colors.warning + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  limitBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.warning,
   },
   sectionLink: {
     fontSize: 14,
