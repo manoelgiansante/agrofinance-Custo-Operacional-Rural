@@ -54,8 +54,8 @@ export default function DashboardScreen() {
       >
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Bem-vindo ao</Text>
-            <Text style={styles.title}>Agrofinance</Text>
+            <Text style={styles.title}>agrofinance</Text>
+            <Text style={styles.subtitle}>Custo Operacional</Text>
           </View>
           <TouchableOpacity 
             style={styles.addButton}
@@ -223,16 +223,18 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 24,
   },
-  greeting: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    letterSpacing: 0.3,
-  },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '600',
     color: colors.primary,
     letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    letterSpacing: 1,
+    textTransform: 'uppercase' as const,
+    marginTop: 2,
   },
   addButton: {
     width: 44,
