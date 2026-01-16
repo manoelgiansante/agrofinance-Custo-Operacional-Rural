@@ -1,28 +1,23 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useState, useMemo } from 'react';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Search, Plus, Calendar } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
 export default function ExpensesScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams();
   const { expenses, operations } = useApp();
   const [search, setSearch] = useState('');
-  const [selectedOperation, setSelectedOperation] = useState<string | null>(
-    params.operation as string || null
-  );
+  const [selectedOperation, setSelectedOperation] = useState<string | null>(null);
 
-  const filteredExpenses = useMemo(() => {
-    return expenses.filter(expense => {
-      const matchesSearch = expense.description.toLowerCase().includes(search.toLowerCase()) ||
-        expense.supplier.toLowerCase().includes(search.toLowerCase());
-      const matchesOperation = !selectedOperation || expense.operationId === selectedOperation;
-      return matchesSearch && matchesOperation;
-    });
-  }, [expenses, search, selectedOperation]);
+  const filteredExpenses = expenses.filter(expense => {
+    const matchesSearch = expense.description.toLowerCase().includes(search.toLowerCase()) ||
+      expense.supplier.toLowerCase().includes(search.toLowerCase());
+    const matchesOperation = !selectedOperation || expense.operationId === selectedOperation;
+    return matchesSearch && matchesOperation;
+  });
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -43,13 +38,13 @@ export default function ExpensesScreen() {
           style={styles.addButton}
           onPress={() => router.push('/add-expense')}
         >
-          <Plus size={20} color={colors.textLight} />
+          <Plus size={20} color={colors.textLight} strokeWidth={1.5} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <Search size={18} color={colors.textMuted} />
+          <Search size={18} color={colors.textMuted} strokeWidth={1.5} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar lançamento..."
@@ -74,21 +69,18 @@ export default function ExpensesScreen() {
             Todas
           </Text>
         </TouchableOpacity>
-        {operations.map(operation => (
+        {operations.map((operation) => (
           <TouchableOpacity 
             key={operation.id}
             style={[
               styles.filterChip, 
-              selectedOperation === operation.id && styles.filterChipActive,
-              selectedOperation === operation.id && { backgroundColor: operation.color }
+              selectedOperation === operation.id && styles.filterChipActive
             ]}
-            onPress={() => setSelectedOperation(
-              selectedOperation === operation.id ? null : operation.id
-            )}
+            onPress={() => setSelectedOperation(selectedOperation === operation.id ? null : operation.id)}
           >
             <View style={[styles.filterDot, { backgroundColor: operation.color }]} />
             <Text style={[
-              styles.filterText, 
+              styles.filterText,
               selectedOperation === operation.id && styles.filterTextActive
             ]}>
               {operation.name}
@@ -106,7 +98,7 @@ export default function ExpensesScreen() {
             </Text>
           </View>
         ) : (
-          filteredExpenses.map(expense => {
+          filteredExpenses.map((expense) => {
             const operation = operations.find(op => op.id === expense.operationId);
             return (
               <TouchableOpacity 
@@ -125,17 +117,17 @@ export default function ExpensesScreen() {
                   <View style={styles.expenseDetails}>
                     <Text style={styles.expenseSupplier}>{expense.supplier}</Text>
                     <View style={styles.expenseMeta}>
-                      <Calendar size={12} color={colors.textMuted} />
-                      <Text style={styles.expenseDate}>Venc: {formatDate(expense.dueDate)}</Text>
+                      <Calendar size={12} color={colors.textMuted} strokeWidth={1.5} />
+                      <Text style={styles.expenseDate}>{formatDate(expense.dueDate)}</Text>
                     </View>
                   </View>
                   <View style={styles.expenseFooter}>
-                    <View style={[styles.operationBadge, { backgroundColor: operation?.color + '20' }]}>
+                    <View style={[styles.operationBadge, { backgroundColor: operation?.color + '12' }]}>
                       <Text style={[styles.operationBadgeText, { color: operation?.color }]}>
                         {operation?.name}
                       </Text>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(expense.status) + '20' }]}>
+                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(expense.status) + '12' }]}>
                       <Text style={[styles.statusText, { color: getStatusColor(expense.status) }]}>
                         {getStatusLabel(expense.status)}
                       </Text>
@@ -154,7 +146,7 @@ export default function ExpensesScreen() {
 
 function getStatusColor(status: string): string {
   switch (status) {
-    case 'pending': return colors.statusPending;
+    case 'pending': return colors.warning;
     case 'verified': return colors.info;
     case 'discrepancy': return colors.error;
     case 'paid': return colors.success;
@@ -181,14 +173,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 16,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '600',
     color: colors.text,
+    letterSpacing: -0.5,
   },
   addButton: {
     width: 40,
@@ -199,8 +192,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   searchBox: {
     flexDirection: 'row',
@@ -210,7 +203,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     height: 48,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.border,
   },
   searchInput: {
     flex: 1,
@@ -220,10 +213,11 @@ const styles = StyleSheet.create({
   },
   filterScroll: {
     maxHeight: 44,
+    marginBottom: 16,
   },
   filterContent: {
-    paddingHorizontal: 20,
-    gap: 8,
+    paddingHorizontal: 24,
+    gap: 10,
   },
   filterChip: {
     flexDirection: 'row',
@@ -243,7 +237,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 6,
+    marginRight: 8,
   },
   filterText: {
     fontSize: 13,
@@ -255,55 +249,51 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
-    paddingHorizontal: 20,
-    marginTop: 16,
+    paddingHorizontal: 24,
   },
   expenseCard: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
-    borderRadius: 14,
+    borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   expenseIndicator: {
     width: 4,
   },
   expenseContent: {
     flex: 1,
-    padding: 14,
+    padding: 16,
   },
   expenseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 6,
+    marginBottom: 8,
   },
   expenseDescription: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.text,
-    marginRight: 10,
+    marginRight: 12,
   },
   expenseValue: {
     fontSize: 15,
-    fontWeight: '700',
-    color: colors.primary,
+    fontWeight: '600',
+    color: colors.text,
   },
   expenseDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   expenseSupplier: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: colors.textMuted,
   },
   expenseMeta: {
     flexDirection: 'row',
@@ -317,7 +307,6 @@ const styles = StyleSheet.create({
   expenseFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   operationBadge: {
     paddingHorizontal: 10,
@@ -326,7 +315,7 @@ const styles = StyleSheet.create({
   },
   operationBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -335,7 +324,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   emptyState: {
     alignItems: 'center',
@@ -343,10 +332,10 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   emptyText: {
     fontSize: 14,

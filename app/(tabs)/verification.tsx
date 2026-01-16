@@ -4,10 +4,9 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { 
   CheckCircle2, 
-  AlertTriangle, 
-  FileText,
-  ChevronRight,
-  Clock
+  AlertTriangle,
+  Clock,
+  ChevronRight
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -39,8 +38,8 @@ export default function VerificationScreen() {
   const handleVerify = (expense: Expense) => {
     if (!expense.invoiceValue) {
       Alert.alert(
-        'Informar Valor da Nota',
-        'Informe o valor da nota fiscal para verificar este lançamento.',
+        'Verificação',
+        'Informe o valor da nota fiscal para verificar.',
         [{ text: 'OK' }]
       );
       router.push(`/expense-detail?id=${expense.id}`);
@@ -49,12 +48,12 @@ export default function VerificationScreen() {
 
     if (expense.invoiceValue !== expense.agreedValue) {
       Alert.alert(
-        'Divergência Encontrada',
+        'Divergência Detectada',
         `Valor combinado: ${formatCurrency(expense.agreedValue)}\nValor da nota: ${formatCurrency(expense.invoiceValue)}\n\nDiferença: ${formatCurrency(Math.abs(expense.invoiceValue - expense.agreedValue))}`,
         [
           { text: 'Cancelar', style: 'cancel' },
           { 
-            text: 'Marcar como Divergência', 
+            text: 'Marcar Divergência', 
             style: 'destructive',
             onPress: () => updateExpense(expense.id, { 
               status: 'discrepancy',
@@ -75,7 +74,7 @@ export default function VerificationScreen() {
   const handleMarkAsPaid = (expense: Expense) => {
     Alert.alert(
       'Confirmar Pagamento',
-      `Deseja marcar "${expense.description}" como pago?`,
+      `Confirmar pagamento de "${expense.description}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { 
@@ -89,10 +88,10 @@ export default function VerificationScreen() {
     );
   };
 
-  const tabs: { key: TabType; label: string; count: number; color: string }[] = [
-    { key: 'pending', label: 'Pendentes', count: pendingExpenses.length, color: colors.statusPending },
-    { key: 'discrepancy', label: 'Divergências', count: discrepancyExpenses.length, color: colors.error },
-    { key: 'verified', label: 'Verificados', count: verifiedExpenses.length, color: colors.success },
+  const tabs: { key: TabType; label: string; count: number }[] = [
+    { key: 'pending', label: 'Pendentes', count: pendingExpenses.length },
+    { key: 'discrepancy', label: 'Divergências', count: discrepancyExpenses.length },
+    { key: 'verified', label: 'Verificados', count: verifiedExpenses.length },
   ];
 
   return (
@@ -103,8 +102,8 @@ export default function VerificationScreen() {
       </View>
 
       <View style={styles.tabsContainer}>
-        {tabs.map(tab => (
-          <TouchableOpacity 
+        {tabs.map((tab) => (
+          <TouchableOpacity
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
             onPress={() => setActiveTab(tab.key)}
@@ -112,8 +111,16 @@ export default function VerificationScreen() {
             <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
               {tab.label}
             </Text>
-            <View style={[styles.tabBadge, { backgroundColor: tab.color }]}>
-              <Text style={styles.tabBadgeText}>{tab.count}</Text>
+            <View style={[
+              styles.tabBadge, 
+              activeTab === tab.key && styles.tabBadgeActive
+            ]}>
+              <Text style={[
+                styles.tabBadgeText,
+                activeTab === tab.key && styles.tabBadgeTextActive
+              ]}>
+                {tab.count}
+              </Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -123,9 +130,9 @@ export default function VerificationScreen() {
         {getFilteredExpenses().length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
-              {activeTab === 'pending' && <Clock size={48} color={colors.textMuted} />}
-              {activeTab === 'discrepancy' && <AlertTriangle size={48} color={colors.textMuted} />}
-              {activeTab === 'verified' && <CheckCircle2 size={48} color={colors.textMuted} />}
+              {activeTab === 'pending' && <Clock size={40} color={colors.textMuted} strokeWidth={1.5} />}
+              {activeTab === 'discrepancy' && <AlertTriangle size={40} color={colors.textMuted} strokeWidth={1.5} />}
+              {activeTab === 'verified' && <CheckCircle2 size={40} color={colors.textMuted} strokeWidth={1.5} />}
             </View>
             <Text style={styles.emptyTitle}>
               {activeTab === 'pending' && 'Nenhum pendente'}
@@ -134,15 +141,15 @@ export default function VerificationScreen() {
             </Text>
             <Text style={styles.emptyText}>
               {activeTab === 'pending' && 'Todos os lançamentos foram verificados'}
-              {activeTab === 'discrepancy' && 'Ótimo! Não há divergências'}
+              {activeTab === 'discrepancy' && 'Não há divergências a resolver'}
               {activeTab === 'verified' && 'Verifique os lançamentos pendentes'}
             </Text>
           </View>
         ) : (
-          getFilteredExpenses().map(expense => {
+          getFilteredExpenses().map((expense) => {
             const operation = operations.find(op => op.id === expense.operationId);
             const hasDifference = expense.invoiceValue && expense.invoiceValue !== expense.agreedValue;
-            
+
             return (
               <View key={expense.id} style={styles.card}>
                 <TouchableOpacity 
@@ -154,7 +161,7 @@ export default function VerificationScreen() {
                     <Text style={styles.cardTitle} numberOfLines={1}>{expense.description}</Text>
                     <Text style={styles.cardSupplier}>{expense.supplier}</Text>
                   </View>
-                  <ChevronRight size={18} color={colors.textMuted} />
+                  <ChevronRight size={18} color={colors.textMuted} strokeWidth={1.5} />
                 </TouchableOpacity>
 
                 <View style={styles.cardValues}>
@@ -193,35 +200,30 @@ export default function VerificationScreen() {
 
                 <View style={styles.cardActions}>
                   {activeTab === 'pending' && (
-                    <>
-                      <TouchableOpacity 
-                        style={[styles.actionButton, styles.actionButtonPrimary]}
-                        onPress={() => handleVerify(expense)}
-                      >
-                        <CheckCircle2 size={18} color={colors.textLight} />
-                        <Text style={styles.actionButtonTextLight}>Verificar</Text>
-                      </TouchableOpacity>
-                    </>
+                    <TouchableOpacity 
+                      style={styles.actionButton}
+                      onPress={() => handleVerify(expense)}
+                    >
+                      <CheckCircle2 size={16} color={colors.textLight} strokeWidth={1.5} />
+                      <Text style={styles.actionButtonText}>Verificar</Text>
+                    </TouchableOpacity>
                   )}
                   {activeTab === 'verified' && (
                     <TouchableOpacity 
                       style={[styles.actionButton, styles.actionButtonSuccess]}
                       onPress={() => handleMarkAsPaid(expense)}
                     >
-                      <CheckCircle2 size={18} color={colors.textLight} />
-                      <Text style={styles.actionButtonTextLight}>Marcar como Pago</Text>
+                      <CheckCircle2 size={16} color={colors.textLight} strokeWidth={1.5} />
+                      <Text style={styles.actionButtonText}>Marcar como Pago</Text>
                     </TouchableOpacity>
                   )}
                   {activeTab === 'discrepancy' && (
-                    <>
-                      <TouchableOpacity 
-                        style={[styles.actionButton, styles.actionButtonOutline]}
-                        onPress={() => router.push(`/expense-detail?id=${expense.id}`)}
-                      >
-                        <FileText size={18} color={colors.primary} />
-                        <Text style={styles.actionButtonTextPrimary}>Ver Detalhes</Text>
-                      </TouchableOpacity>
-                    </>
+                    <TouchableOpacity 
+                      style={[styles.actionButton, styles.actionButtonOutline]}
+                      onPress={() => router.push(`/expense-detail?id=${expense.id}`)}
+                    >
+                      <Text style={styles.actionButtonTextOutline}>Ver Detalhes</Text>
+                    </TouchableOpacity>
                   )}
                 </View>
               </View>
@@ -240,23 +242,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: 24,
+    paddingTop: 20,
     paddingBottom: 20,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '600',
     color: colors.text,
+    letterSpacing: -0.5,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: colors.textMuted,
   },
   tabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginBottom: 20,
     gap: 8,
   },
@@ -266,45 +269,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 12,
     backgroundColor: colors.surface,
-    gap: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 6,
   },
   tabActive: {
     backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   tabLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.textSecondary,
   },
   tabLabelActive: {
     color: colors.textLight,
   },
   tabBadge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: 4,
+    backgroundColor: colors.border,
+  },
+  tabBadgeActive: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   tabBadgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  tabBadgeTextActive: {
     color: colors.textLight,
   },
   list: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   card: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
-    marginBottom: 14,
+    borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -314,9 +324,9 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderLight,
   },
   operationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: 12,
   },
   cardInfo: {
@@ -324,13 +334,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.text,
     marginBottom: 2,
   },
   cardSupplier: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: colors.textMuted,
   },
   cardValues: {
     flexDirection: 'row',
@@ -346,8 +356,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   valueAmount: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: colors.text,
   },
   valueAmountError: {
@@ -355,55 +365,49 @@ const styles = StyleSheet.create({
   },
   valueDivider: {
     width: 1,
-    backgroundColor: colors.borderLight,
+    backgroundColor: colors.border,
   },
   notesContainer: {
     marginHorizontal: 16,
     marginBottom: 12,
     padding: 12,
-    backgroundColor: colors.warning + '15',
+    backgroundColor: colors.warning + '10',
     borderRadius: 8,
   },
   notesText: {
     fontSize: 13,
     color: colors.warning,
-    fontWeight: '500',
   },
   cardActions: {
-    flexDirection: 'row',
-    padding: 12,
+    padding: 16,
     paddingTop: 0,
-    gap: 10,
   },
   actionButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    borderRadius: 10,
-    gap: 8,
-  },
-  actionButtonPrimary: {
     backgroundColor: colors.primary,
+    borderRadius: 8,
+    gap: 8,
   },
   actionButtonSuccess: {
     backgroundColor: colors.success,
   },
   actionButtonOutline: {
-    backgroundColor: colors.primary + '10',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.primary + '30',
+    borderColor: colors.border,
   },
-  actionButtonTextLight: {
+  actionButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.textLight,
   },
-  actionButtonTextPrimary: {
+  actionButtonTextOutline: {
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
+    fontWeight: '500',
+    color: colors.text,
   },
   emptyState: {
     alignItems: 'center',
@@ -414,10 +418,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   emptyText: {
     fontSize: 14,

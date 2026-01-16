@@ -5,8 +5,6 @@ import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-reac
 import { colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 
-
-
 export default function ReportsScreen() {
   const { expenses, operations } = useApp();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
@@ -24,7 +22,7 @@ export default function ReportsScreen() {
       const opExpenses = monthExpenses.filter(exp => exp.operationId === op.id);
       const total = opExpenses.reduce((sum, exp) => sum + exp.agreedValue, 0);
       const paid = opExpenses.filter(e => e.status === 'paid').reduce((sum, e) => sum + e.agreedValue, 0);
-      const pending = opExpenses.filter(e => e.status !== 'paid').reduce((sum, e) => sum + e.agreedValue, 0);
+      const pending = total - paid;
       return {
         operation: op,
         total,
@@ -88,7 +86,7 @@ export default function ReportsScreen() {
           style={styles.monthButton}
           onPress={() => changeMonth(-1)}
         >
-          <ChevronLeft size={24} color={colors.primary} />
+          <ChevronLeft size={20} color={colors.primary} strokeWidth={1.5} />
         </TouchableOpacity>
         <Text style={styles.monthText}>
           {selectedMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
@@ -97,35 +95,34 @@ export default function ReportsScreen() {
           style={styles.monthButton}
           onPress={() => changeMonth(1)}
         >
-          <ChevronRight size={24} color={colors.primary} />
+          <ChevronRight size={20} color={colors.primary} strokeWidth={1.5} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.summaryCard}>
-          <View style={styles.summaryMain}>
-            <Text style={styles.summaryLabel}>Total do Mês</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(monthlyData.totalMonth)}</Text>
-            {percentChange !== 0 && (
-              <View style={[
-                styles.changeIndicator,
-                { backgroundColor: percentChange > 0 ? colors.error + '20' : colors.success + '20' }
-              ]}>
-                {percentChange > 0 ? (
-                  <TrendingUp size={14} color={colors.error} />
-                ) : (
-                  <TrendingDown size={14} color={colors.success} />
-                )}
-                <Text style={[
-                  styles.changeText,
-                  { color: percentChange > 0 ? colors.error : colors.success }
-                ]}>
-                  {Math.abs(percentChange).toFixed(1)}% vs mês anterior
-                </Text>
-              </View>
-            )}
-          </View>
+          <Text style={styles.summaryLabel}>Total do Mês</Text>
+          <Text style={styles.summaryValue}>{formatCurrency(monthlyData.totalMonth)}</Text>
           
+          {percentChange !== 0 && (
+            <View style={[
+              styles.changeIndicator,
+              { backgroundColor: percentChange > 0 ? colors.error + '10' : colors.success + '10' }
+            ]}>
+              {percentChange > 0 ? (
+                <TrendingUp size={14} color={colors.error} strokeWidth={1.5} />
+              ) : (
+                <TrendingDown size={14} color={colors.success} strokeWidth={1.5} />
+              )}
+              <Text style={[
+                styles.changeText,
+                { color: percentChange > 0 ? colors.error : colors.success }
+              ]}>
+                {Math.abs(percentChange).toFixed(1)}% vs mês anterior
+              </Text>
+            </View>
+          )}
+
           <View style={styles.summaryGrid}>
             <View style={styles.summaryGridItem}>
               <Text style={styles.gridLabel}>Pago</Text>
@@ -133,12 +130,14 @@ export default function ReportsScreen() {
                 {formatCurrency(monthlyData.totalPaid)}
               </Text>
             </View>
+            <View style={styles.gridDivider} />
             <View style={styles.summaryGridItem}>
               <Text style={styles.gridLabel}>Pendente</Text>
               <Text style={[styles.gridValue, { color: colors.warning }]}>
                 {formatCurrency(monthlyData.totalPending)}
               </Text>
             </View>
+            <View style={styles.gridDivider} />
             <View style={styles.summaryGridItem}>
               <Text style={styles.gridLabel}>Lançamentos</Text>
               <Text style={styles.gridValue}>{monthlyData.expenseCount}</Text>
@@ -148,13 +147,13 @@ export default function ReportsScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Por Operação</Text>
-          
+
           {monthlyData.operationTotals.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>Nenhum lançamento neste mês</Text>
             </View>
           ) : (
-            monthlyData.operationTotals.map((item, index) => (
+            monthlyData.operationTotals.map((item) => (
               <View key={item.operation.id} style={styles.operationCard}>
                 <View style={styles.operationHeader}>
                   <View style={[styles.operationDot, { backgroundColor: item.operation.color }]} />
@@ -173,7 +172,7 @@ export default function ReportsScreen() {
                     ]} 
                   />
                 </View>
-                
+
                 <View style={styles.operationDetails}>
                   <Text style={styles.detailText}>
                     <Text style={{ color: colors.success }}>{formatCurrency(item.paid)}</Text> pago
@@ -181,7 +180,6 @@ export default function ReportsScreen() {
                   <Text style={styles.detailText}>
                     <Text style={{ color: colors.warning }}>{formatCurrency(item.pending)}</Text> pendente
                   </Text>
-                  <Text style={styles.detailText}>{item.count} lançamentos</Text>
                 </View>
               </View>
             ))
@@ -192,7 +190,7 @@ export default function ReportsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Distribuição</Text>
             <View style={styles.distributionCard}>
-              {monthlyData.operationTotals.map((item, index) => {
+              {monthlyData.operationTotals.map((item) => {
                 const percentage = (item.total / monthlyData.totalMonth) * 100;
                 return (
                   <View key={item.operation.id} style={styles.distributionItem}>
@@ -231,63 +229,64 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: 24,
+    paddingTop: 20,
     paddingBottom: 8,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '600',
     color: colors.text,
+    letterSpacing: -0.5,
   },
   monthSelector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   monthButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary + '15',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   monthText: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
     color: colors.text,
     textTransform: 'capitalize',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   summaryCard: {
-    backgroundColor: colors.primary,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
-  },
-  summaryMain: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
-    marginBottom: 20,
   },
   summaryLabel: {
-    fontSize: 14,
-    color: colors.textLight,
-    opacity: 0.8,
-    marginBottom: 4,
+    fontSize: 13,
+    color: colors.textMuted,
+    marginBottom: 8,
   },
   summaryValue: {
     fontSize: 32,
-    fontWeight: '700',
-    color: colors.textLight,
-    marginBottom: 8,
+    fontWeight: '600',
+    color: colors.text,
+    letterSpacing: -1,
+    marginBottom: 12,
   },
   changeIndicator: {
     flexDirection: 'row',
@@ -296,16 +295,18 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     gap: 6,
+    marginBottom: 20,
   },
   changeText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   summaryGrid: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 12,
-    padding: 16,
+    width: '100%',
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   summaryGridItem: {
     flex: 1,
@@ -313,34 +314,34 @@ const styles = StyleSheet.create({
   },
   gridLabel: {
     fontSize: 12,
-    color: colors.textLight,
-    opacity: 0.7,
+    color: colors.textMuted,
     marginBottom: 4,
   },
   gridValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.textLight,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  gridDivider: {
+    width: 1,
+    backgroundColor: colors.border,
   },
   section: {
-    marginBottom: 24,
+    marginTop: 28,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 16,
   },
   operationCard: {
     backgroundColor: colors.surface,
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   operationHeader: {
     flexDirection: 'row',
@@ -348,50 +349,47 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   operationDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: 10,
   },
   operationName: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.text,
   },
   operationTotal: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '600',
     color: colors.text,
   },
   barContainer: {
-    height: 8,
+    height: 6,
     backgroundColor: colors.borderLight,
-    borderRadius: 4,
+    borderRadius: 3,
     marginBottom: 12,
     overflow: 'hidden',
   },
   barFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 3,
   },
   operationDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   detailText: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
   },
   distributionCard: {
     backgroundColor: colors.surface,
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   distributionItem: {
     marginBottom: 16,
@@ -402,10 +400,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   distributionDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 10,
   },
   distributionName: {
     flex: 1,
@@ -414,24 +412,27 @@ const styles = StyleSheet.create({
   },
   distributionPercent: {
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
+    fontWeight: '500',
+    color: colors.textSecondary,
   },
   distributionBarContainer: {
-    height: 6,
+    height: 4,
     backgroundColor: colors.borderLight,
-    borderRadius: 3,
+    borderRadius: 2,
     overflow: 'hidden',
   },
   distributionBar: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
   emptyState: {
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 40,
     backgroundColor: colors.surface,
-    borderRadius: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   emptyText: {
     fontSize: 14,

@@ -49,7 +49,7 @@ export default function DashboardScreen() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         <View style={styles.header}>
@@ -61,7 +61,7 @@ export default function DashboardScreen() {
             style={styles.addButton}
             onPress={() => router.push('/add-expense')}
           >
-            <Plus size={24} color={colors.textLight} />
+            <Plus size={20} color={colors.textLight} strokeWidth={1.5} />
           </TouchableOpacity>
         </View>
 
@@ -75,8 +75,8 @@ export default function DashboardScreen() {
           
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <View style={[styles.summaryIcon, { backgroundColor: colors.primary + '20' }]}>
-                <Wallet size={20} color={colors.primary} />
+              <View style={styles.summaryIconWrapper}>
+                <Wallet size={18} color={colors.primary} strokeWidth={1.5} />
               </View>
               <Text style={styles.summaryLabel}>Total</Text>
               <Text style={styles.summaryValue}>{formatCurrency(getMonthlyTotal)}</Text>
@@ -85,8 +85,8 @@ export default function DashboardScreen() {
             <View style={styles.summaryDivider} />
             
             <View style={styles.summaryItem}>
-              <View style={[styles.summaryIcon, { backgroundColor: colors.statusPending + '20' }]}>
-                <Clock size={20} color={colors.statusPending} />
+              <View style={[styles.summaryIconWrapper, { backgroundColor: colors.warning + '15' }]}>
+                <Clock size={18} color={colors.warning} strokeWidth={1.5} />
               </View>
               <Text style={styles.summaryLabel}>Pendente</Text>
               <Text style={styles.summaryValue}>{formatCurrency(totalPending)}</Text>
@@ -95,8 +95,8 @@ export default function DashboardScreen() {
             <View style={styles.summaryDivider} />
             
             <View style={styles.summaryItem}>
-              <View style={[styles.summaryIcon, { backgroundColor: colors.success + '20' }]}>
-                <CheckCircle2 size={20} color={colors.success} />
+              <View style={[styles.summaryIconWrapper, { backgroundColor: colors.success + '15' }]}>
+                <CheckCircle2 size={18} color={colors.success} strokeWidth={1.5} />
               </View>
               <Text style={styles.summaryLabel}>Pago</Text>
               <Text style={styles.summaryValue}>{formatCurrency(totalPaid)}</Text>
@@ -109,16 +109,14 @@ export default function DashboardScreen() {
             style={styles.alertCard}
             onPress={() => router.push('/(tabs)/verification')}
           >
-            <View style={styles.alertIcon}>
-              <AlertCircle size={24} color={colors.error} />
-            </View>
+            <AlertCircle size={20} color={colors.error} strokeWidth={1.5} />
             <View style={styles.alertContent}>
-              <Text style={styles.alertTitle}>Atenção!</Text>
+              <Text style={styles.alertTitle}>Atenção</Text>
               <Text style={styles.alertText}>
                 {discrepancies} {discrepancies === 1 ? 'divergência encontrada' : 'divergências encontradas'}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.error} />
+            <ChevronRight size={18} color={colors.error} strokeWidth={1.5} />
           </TouchableOpacity>
         )}
 
@@ -132,20 +130,18 @@ export default function DashboardScreen() {
 
           {operations.filter(op => op.isActive).map((operation) => (
             <TouchableOpacity 
-              key={operation.id} 
+              key={operation.id}
               style={styles.operationCard}
               onPress={() => router.push(`/(tabs)/expenses?operation=${operation.id}`)}
             >
-              <View style={[styles.operationIcon, { backgroundColor: operation.color + '20' }]}>
-                <View style={[styles.operationDot, { backgroundColor: operation.color }]} />
-              </View>
+              <View style={[styles.operationIndicator, { backgroundColor: operation.color }]} />
               <View style={styles.operationInfo}>
                 <Text style={styles.operationName}>{operation.name}</Text>
                 <Text style={styles.operationDescription}>{operation.description}</Text>
               </View>
               <View style={styles.operationValue}>
                 <Text style={styles.operationTotal}>{formatCurrency(getOperationTotal(operation.id))}</Text>
-                <ChevronRight size={18} color={colors.textMuted} />
+                <ChevronRight size={16} color={colors.textMuted} strokeWidth={1.5} />
               </View>
             </TouchableOpacity>
           ))}
@@ -163,7 +159,7 @@ export default function DashboardScreen() {
             const operation = operations.find(op => op.id === expense.operationId);
             return (
               <TouchableOpacity 
-                key={expense.id} 
+                key={expense.id}
                 style={styles.expenseCard}
                 onPress={() => router.push(`/expense-detail?id=${expense.id}`)}
               >
@@ -174,7 +170,7 @@ export default function DashboardScreen() {
                 </View>
                 <View style={styles.expenseRight}>
                   <Text style={styles.expenseValue}>{formatCurrency(expense.agreedValue)}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(expense.status) + '20' }]}>
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(expense.status) + '12' }]}>
                     <Text style={[styles.statusText, { color: getStatusColor(expense.status) }]}>
                       {getStatusLabel(expense.status)}
                     </Text>
@@ -193,7 +189,7 @@ export default function DashboardScreen() {
 
 function getStatusColor(status: string): string {
   switch (status) {
-    case 'pending': return colors.statusPending;
+    case 'pending': return colors.warning;
     case 'verified': return colors.info;
     case 'discrepancy': return colors.error;
     case 'paid': return colors.success;
@@ -223,42 +219,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 24,
   },
   greeting: {
     fontSize: 14,
     color: colors.textSecondary,
+    letterSpacing: 0.3,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '600',
     color: colors.primary,
+    letterSpacing: -0.5,
   },
   addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
   summaryCard: {
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   summaryHeader: {
     flexDirection: 'row',
@@ -267,13 +257,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   summaryTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+    letterSpacing: -0.3,
   },
   summaryMonth: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: colors.textMuted,
     textTransform: 'capitalize',
   },
   summaryRow: {
@@ -284,13 +275,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
-  summaryIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  summaryIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.primary + '12',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   summaryLabel: {
     fontSize: 12,
@@ -299,36 +291,33 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.text,
   },
   summaryDivider: {
     width: 1,
     height: 50,
-    backgroundColor: colors.borderLight,
+    backgroundColor: colors.border,
   },
   alertCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     marginTop: 16,
-    backgroundColor: colors.error + '10',
-    borderRadius: 12,
     padding: 16,
+    backgroundColor: colors.error + '08',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.error + '30',
-  },
-  alertIcon: {
-    marginRight: 12,
+    borderColor: colors.error + '20',
   },
   alertContent: {
     flex: 1,
+    marginLeft: 12,
   },
   alertTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.error,
-    marginBottom: 2,
   },
   alertText: {
     fontSize: 13,
@@ -336,8 +325,8 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   section: {
-    marginTop: 28,
-    paddingHorizontal: 20,
+    marginTop: 32,
+    paddingHorizontal: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -346,9 +335,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.text,
+    letterSpacing: -0.2,
   },
   sectionLink: {
     fontSize: 14,
@@ -359,26 +349,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  operationIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  operationDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+  operationIndicator: {
+    width: 4,
+    height: 36,
+    borderRadius: 2,
   },
   operationInfo: {
     flex: 1,
@@ -386,12 +366,12 @@ const styles = StyleSheet.create({
   },
   operationName: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.text,
     marginBottom: 2,
   },
   operationDescription: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
   },
   operationValue: {
@@ -402,24 +382,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
-    marginRight: 4,
+    marginRight: 6,
   },
   expenseCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   expenseIndicator: {
-    width: 4,
-    height: 40,
+    width: 3,
+    height: 32,
     borderRadius: 2,
   },
   expenseInfo: {
@@ -433,7 +410,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   expenseSupplier: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
   },
   expenseRight: {
@@ -451,8 +428,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   statusText: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '500',
   },
   bottomSpacing: {
     height: 30,
