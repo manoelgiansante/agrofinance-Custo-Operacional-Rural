@@ -19,6 +19,12 @@ export interface Operation {
   createdAt: string;
 }
 
+export interface ExpenseAllocation {
+  operationId: string;
+  percentage: number;
+  value: number;
+}
+
 export interface Expense {
   id: string;
   operationId: string;
@@ -36,6 +42,8 @@ export interface Expense {
   paymentDate?: string;
   verifiedBy?: string;
   verificationNotes?: string;
+  isShared: boolean;
+  allocations?: ExpenseAllocation[];
 }
 
 export type ExpenseStatus = 'pending' | 'verified' | 'discrepancy' | 'paid' | 'rejected';

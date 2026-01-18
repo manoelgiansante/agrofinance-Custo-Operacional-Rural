@@ -47,8 +47,14 @@ CREATE TABLE IF NOT EXISTS expenses (
   notes TEXT,
   payment_date DATE,
   verified_by TEXT,
-  verification_notes TEXT
+  verification_notes TEXT,
+  is_shared BOOLEAN DEFAULT false,
+  allocations JSONB
 );
+
+-- Migração: Adicionar colunas de rateio na tabela expenses (executar se tabela já existe)
+-- ALTER TABLE expenses ADD COLUMN IF NOT EXISTS is_shared BOOLEAN DEFAULT false;
+-- ALTER TABLE expenses ADD COLUMN IF NOT EXISTS allocations JSONB;
 
 -- Tabela de Assinaturas do Usuário
 CREATE TABLE IF NOT EXISTS user_subscriptions (

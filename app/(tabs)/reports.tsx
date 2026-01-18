@@ -22,33 +22,65 @@ export default function ReportsScreen() {
     });
 
     const operationTotals = operations.map(op => {
-      const opExpenses = monthExpenses.filter(exp => exp.operationId === op.id);
-      const total = opExpenses.reduce((sum, exp) => sum + exp.agreedValue, 0);
-      const paid = opExpenses.filter(e => e.status === 'paid').reduce((sum, e) => sum + e.agreedValue, 0);
+      let total = 0;
+      let paid = 0;
+      let count = 0;
+      
+      monthExpenses.forEach(exp => {
+        if (exp.isShared && exp.allocations) {
+          const allocation = exp.allocations.find(a => a.operationId === op.id);
+          if (allocation) {
+            total += allocation.value;
+            if (exp.status === 'paid') paid += allocation.value;
+            count++;
+          }
+        } else if (exp.operationId === op.id) {
+          total += exp.agreedValue;
+          if (exp.status === 'paid') paid += exp.agreedValue;
+          count++;
+        }
+      });
+      
       const pending = total - paid;
       return {
         operation: op,
         total,
         paid,
         pending,
-        count: opExpenses.length,
+        count,
       };
     }).filter(item => item.total > 0);
 
     const sectorTotals = sectors.map(sector => {
       const sectorOps = getOperationsBySector(sector.id);
-      const sectorExpenses = monthExpenses.filter(exp => 
-        sectorOps.some(op => op.id === exp.operationId)
-      );
-      const total = sectorExpenses.reduce((sum, exp) => sum + exp.agreedValue, 0);
-      const paid = sectorExpenses.filter(e => e.status === 'paid').reduce((sum, e) => sum + e.agreedValue, 0);
+      const sectorOpIds = sectorOps.map(op => op.id);
+      let total = 0;
+      let paid = 0;
+      let count = 0;
+      
+      monthExpenses.forEach(exp => {
+        if (exp.isShared && exp.allocations) {
+          exp.allocations.forEach(allocation => {
+            if (sectorOpIds.includes(allocation.operationId)) {
+              total += allocation.value;
+              if (exp.status === 'paid') paid += allocation.value;
+              count++;
+            }
+          });
+        } else if (sectorOpIds.includes(exp.operationId)) {
+          total += exp.agreedValue;
+          if (exp.status === 'paid') paid += exp.agreedValue;
+          count++;
+        }
+      });
+      
       const pending = total - paid;
       return {
         sector,
         total,
         paid,
         pending,
-        count: sectorExpenses.length,
+        count,
       };
     }).filter(item => item.total > 0);
 

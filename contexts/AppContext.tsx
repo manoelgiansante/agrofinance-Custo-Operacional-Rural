@@ -113,6 +113,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
           paymentDate: e.payment_date || undefined,
           verifiedBy: e.verified_by || undefined,
           verificationNotes: e.verification_notes || undefined,
+          isShared: e.is_shared || false,
+          allocations: e.allocations ? (typeof e.allocations === 'string' ? JSON.parse(e.allocations) : e.allocations) : undefined,
         }));
         setExpenses(mappedExpenses);
         console.log('[App] Expenses loaded:', mappedExpenses.length);
@@ -358,6 +360,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
         payment_date: expense.paymentDate || null,
         verified_by: expense.verifiedBy || null,
         verification_notes: expense.verificationNotes || null,
+        is_shared: expense.isShared || false,
+        allocations: expense.allocations ? JSON.stringify(expense.allocations) : null,
       })
       .select()
       .single();
@@ -384,6 +388,8 @@ export const [AppProvider, useApp] = createContextHook(() => {
       paymentDate: data.payment_date || undefined,
       verifiedBy: data.verified_by || undefined,
       verificationNotes: data.verification_notes || undefined,
+      isShared: data.is_shared || false,
+      allocations: data.allocations ? (typeof data.allocations === 'string' ? JSON.parse(data.allocations) : data.allocations) : undefined,
     };
 
     setExpenses(prev => [newExpense, ...prev]);
@@ -442,7 +448,13 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [operations]);
 
   const getExpensesByOperation = useCallback((operationId: string) => {
-    return expenses.filter(exp => exp.operationId === operationId);
+    return expenses.filter(exp => {
+      if (exp.operationId === operationId) return true;
+      if (exp.isShared && exp.allocations) {
+        return exp.allocations.some(a => a.operationId === operationId);
+      }
+      return false;
+    });
   }, [expenses]);
 
   const getExpensesByStatus = useCallback((status: Expense['status']) => {
@@ -454,9 +466,19 @@ export const [AppProvider, useApp] = createContextHook(() => {
   }, [expenses]);
 
   const getTotalByOperation = useCallback((operationId: string) => {
-    return expenses
-      .filter(exp => exp.operationId === operationId)
-      .reduce((sum, exp) => sum + exp.agreedValue, 0);
+    return expenses.reduce((sum, exp) => {
+      if (exp.isShared && exp.allocations) {
+        const allocation = exp.allocations.find(a => a.operationId === operationId);
+        if (allocation) {
+          return sum + allocation.value;
+        }
+        return sum;
+      }
+      if (exp.operationId === operationId) {
+        return sum + exp.agreedValue;
+      }
+      return sum;
+    }, 0);
   }, [expenses]);
 
   const getMonthlyTotal = useMemo(() => {

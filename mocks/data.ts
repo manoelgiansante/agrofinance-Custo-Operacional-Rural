@@ -53,6 +53,7 @@ export const mockExpenses: Expense[] = [
     createdBy: 'Maria',
     status: 'paid',
     paymentDate: '2024-01-14',
+    isShared: false,
   },
   {
     id: '2',
@@ -68,6 +69,7 @@ export const mockExpenses: Expense[] = [
     createdBy: 'Maria',
     status: 'discrepancy',
     verificationNotes: 'Valor da nota maior que o combinado. Verificar com fornecedor.',
+    isShared: false,
   },
   {
     id: '3',
@@ -80,6 +82,7 @@ export const mockExpenses: Expense[] = [
     createdAt: '2024-01-15',
     createdBy: 'Maria',
     status: 'pending',
+    isShared: false,
   },
   {
     id: '4',
@@ -95,6 +98,7 @@ export const mockExpenses: Expense[] = [
     createdBy: 'Maria',
     status: 'verified',
     verifiedBy: 'Ana',
+    isShared: false,
   },
   {
     id: '5',
@@ -110,6 +114,7 @@ export const mockExpenses: Expense[] = [
     createdBy: 'Maria',
     status: 'paid',
     paymentDate: '2024-01-28',
+    isShared: false,
   },
   {
     id: '6',
@@ -122,6 +127,7 @@ export const mockExpenses: Expense[] = [
     createdAt: '2024-01-25',
     createdBy: 'Maria',
     status: 'pending',
+    isShared: false,
   },
 ];
 
