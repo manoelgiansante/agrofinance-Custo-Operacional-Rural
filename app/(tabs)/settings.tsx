@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -15,7 +15,11 @@ import {
   Mail,
   Edit3,
   Cloud,
-  CloudOff
+  CloudOff,
+  Lock,
+  Eye,
+  EyeOff,
+  Leaf
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
@@ -24,8 +28,36 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function SettingsScreen() {
   const router = useRouter();
   const { operations, deleteOperation, sectors, deleteSector } = useApp();
-  const { signOut, isAuthenticated, user } = useAuth();
+  const { signOut, isAuthenticated, user, signIn, signUp } = useAuth();
   const [notifications, setNotifications] = useState(true);
+  
+  // Estados para login inline
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleAuth = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Erro', 'Preencha todos os campos');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (isLogin) {
+        await signIn(email.trim(), password);
+      } else {
+        await signUp(email.trim(), password);
+        Alert.alert('Sucesso', 'Conta criada! Verifique seu email para confirmar.');
+      }
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Erro ao autenticar');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDeleteOperation = (id: string, name: string) => {
     Alert.alert(
@@ -65,11 +97,101 @@ export default function SettingsScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Seção de Conta - Sempre no topo */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Conta</Text>
-          
-          {isAuthenticated ? (
-            // Usuário logado
+        {!isAuthenticated ? (
+          // Usuário não logado - Tela de Login/Cadastro estilo página inicial
+          <View style={styles.heroSection}>
+            <View style={styles.heroHeader}>
+              <View style={styles.heroLogo}>
+                <Leaf size={32} color={colors.primary} strokeWidth={1.5} />
+              </View>
+              <Text style={styles.heroTitle}>Agrofinance</Text>
+              <Text style={styles.heroSubtitle}>Gestão de Custo Operacional Rural</Text>
+            </View>
+
+            <View style={styles.authCard}>
+              <View style={styles.authTabs}>
+                <TouchableOpacity 
+                  style={[styles.authTab, isLogin && styles.authTabActive]}
+                  onPress={() => setIsLogin(true)}
+                >
+                  <Text style={[styles.authTabText, isLogin && styles.authTabTextActive]}>Entrar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.authTab, !isLogin && styles.authTabActive]}
+                  onPress={() => setIsLogin(false)}
+                >
+                  <Text style={[styles.authTabText, !isLogin && styles.authTabTextActive]}>Criar Conta</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.authForm}>
+                <View style={styles.inputContainer}>
+                  <Mail size={18} color={colors.textMuted} strokeWidth={1.5} />
+                  <TextInput
+                    style={styles.authInput}
+                    placeholder="Email"
+                    placeholderTextColor={colors.textMuted}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <Lock size={18} color={colors.textMuted} strokeWidth={1.5} />
+                  <TextInput
+                    style={styles.authInput}
+                    placeholder="Senha"
+                    placeholderTextColor={colors.textMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                    {showPassword ? (
+                      <EyeOff size={18} color={colors.textMuted} strokeWidth={1.5} />
+                    ) : (
+                      <Eye size={18} color={colors.textMuted} strokeWidth={1.5} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity 
+                  style={[styles.authSubmitButton, isLoading && styles.authSubmitButtonDisabled]}
+                  onPress={handleAuth}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.authSubmitButtonText}>
+                    {isLoading ? 'Aguarde...' : (isLogin ? 'Entrar' : 'Criar Conta')}
+                  </Text>
+                </TouchableOpacity>
+
+                {isLogin && (
+                  <TouchableOpacity style={styles.forgotPassword}>
+                    <Text style={styles.forgotPasswordText}>Esqueci minha senha</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={styles.authDivider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>ou continue sem conta</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View style={styles.offlineNotice}>
+                <CloudOff size={16} color={colors.textMuted} strokeWidth={1.5} />
+                <Text style={styles.offlineNoticeText}>
+                  Seus dados ficam salvos apenas neste dispositivo
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
+          // Usuário logado
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Conta</Text>
             <View style={styles.accountCard}>
               <View style={styles.accountHeader}>
                 <View style={styles.accountAvatar}>
@@ -111,36 +233,8 @@ export default function SettingsScreen() {
                 <Text style={styles.accountButtonText}>Sair</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            // Usuário não logado
-            <View style={styles.accountCardGuest}>
-              <View style={styles.guestIcon}>
-                <CloudOff size={24} color={colors.textMuted} strokeWidth={1.5} />
-              </View>
-              <Text style={styles.guestTitle}>Modo Offline</Text>
-              <Text style={styles.guestDescription}>
-                Seus dados estão salvos apenas neste dispositivo. Crie uma conta para sincronizar na nuvem.
-              </Text>
-              
-              <View style={styles.authButtons}>
-                <TouchableOpacity 
-                  style={styles.authButtonPrimary}
-                  onPress={() => router.push('/login')}
-                >
-                  <Mail size={16} color={colors.textLight} strokeWidth={1.5} />
-                  <Text style={styles.authButtonPrimaryText}>Criar Conta</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.authButtonSecondary}
-                  onPress={() => router.push('/login')}
-                >
-                  <Text style={styles.authButtonSecondaryText}>Já tenho conta</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-        </View>
+          </View>
+        )}
 
         {/* Seção de Setores */}
         <View style={styles.section}>
@@ -381,64 +475,140 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontWeight: '500',
   },
-  // Conta - Não logado
-  accountCardGuest: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
+  // Hero Section - Login
+  heroSection: {
+    paddingHorizontal: 24,
+    marginBottom: 28,
   },
-  guestIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.surfaceAlt,
+  heroHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  heroLogo: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: colors.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  guestTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  guestDescription: {
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 18,
     marginBottom: 16,
   },
-  authButtons: {
-    width: '100%',
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  authCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  authTabs: {
+    flexDirection: 'row',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 20,
+  },
+  authTab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  authTabActive: {
+    backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  authTabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textMuted,
+  },
+  authTabTextActive: {
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  authForm: {
+    gap: 14,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
     gap: 10,
   },
-  authButtonPrimary: {
+  authInput: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+  },
+  authSubmitButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  authSubmitButtonDisabled: {
+    opacity: 0.7,
+  },
+  authSubmitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textLight,
+  },
+  forgotPassword: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: colors.primary,
+  },
+  authDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerText: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  offlineNotice: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: colors.primary,
     paddingVertical: 12,
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 10,
   },
-  authButtonPrimaryText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textLight,
-  },
-  authButtonSecondary: {
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  authButtonSecondaryText: {
-    fontSize: 14,
-    color: colors.primary,
-    fontWeight: '500',
+  offlineNoticeText: {
+    fontSize: 13,
+    color: colors.textMuted,
   },
   // Operações e Setores
   operationItem: {
