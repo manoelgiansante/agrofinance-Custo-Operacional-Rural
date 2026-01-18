@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert, Te
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   ChevronRight,
   Bell,
@@ -19,11 +20,15 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Leaf
+  Leaf,
+  BookOpen
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useApp } from '@/contexts/AppContext';
 import { useAuth } from '@/contexts/AuthContext';
+import OnboardingTutorial from '@/components/OnboardingTutorial';
+
+const ONBOARDING_KEY = '@agrofinance_onboarding_completed';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -37,6 +42,20 @@ export default function SettingsScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  const handleShowTutorial = async () => {
+    setShowTutorial(true);
+  };
+
+  const handleTutorialComplete = async () => {
+    try {
+      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+      setShowTutorial(false);
+    } catch (error) {
+      setShowTutorial(false);
+    }
+  };
 
   const handleAuth = async () => {
     if (!email.trim() || !password.trim()) {
@@ -91,6 +110,9 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {showTutorial && (
+        <OnboardingTutorial onComplete={handleTutorialComplete} />
+      )}
       <View style={styles.header}>
         <Text style={styles.title}>Configurações</Text>
       </View>
@@ -357,6 +379,14 @@ export default function SettingsScreen() {
         {/* Suporte */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Suporte</Text>
+
+          <TouchableOpacity style={styles.menuItem} onPress={handleShowTutorial}>
+            <View style={[styles.menuIcon, { backgroundColor: colors.primary + '15' }]}>
+              <BookOpen size={18} color={colors.primary} strokeWidth={1.5} />
+            </View>
+            <Text style={styles.menuLabel}>Ver Tutorial</Text>
+            <ChevronRight size={18} color={colors.textMuted} strokeWidth={1.5} />
+          </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuIcon}>
