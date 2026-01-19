@@ -1,20 +1,71 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { X, Check, Star, Zap, Shield, Infinity, RefreshCw } from 'lucide-react-native';
+import { useState } from 'react';
+import { X, Check, Star, Zap, Shield, Infinity, RefreshCw, Crown, Link2 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
-import { subscriptionPlans } from '@/mocks/data';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const plan = subscriptionPlans[0]; // Plano único premium
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { 
+    isAuthenticated, 
+    subscription, 
+    isPremium, 
+    isTrial, 
+    trialDaysRemaining,
+    upgradeSubscription,
+    needsPayment 
+  } = useAuth();
 
-  const handleSubscribe = () => {
-    Alert.alert(
-      'Assinatura',
-      'Funcionalidade de pagamento em desenvolvimento. Em breve você poderá assinar o plano Premium!',
-      [{ text: 'OK' }]
-    );
+  const daysLeft = trialDaysRemaining();
+  const showPaymentRequired = needsPayment();
+
+  const handleSubscribe = async () => {
+    if (!isAuthenticated) {
+      Alert.alert(
+        'Login Necessário',
+        'Faça login para assinar o plano Premium e ter acesso a todos os apps Rumo.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Login', onPress: () => router.push('/login') }
+        ]
+      );
+      return;
+    }
+
+    setIsProcessing(true);
+
+    // Simular processamento de pagamento
+    // TODO: Integrar com Stripe/Pix
+    setTimeout(async () => {
+      Alert.alert(
+        '💳 Pagamento',
+        'Escolha a forma de pagamento:\n\n• PIX: R$ 49,90\n• Cartão: R$ 49,90/mês',
+        [
+          { text: 'Cancelar', style: 'cancel', onPress: () => setIsProcessing(false) },
+          { 
+            text: 'Pagar com PIX', 
+            onPress: async () => {
+              // Simular pagamento aprovado
+              const success = await upgradeSubscription('premium');
+              setIsProcessing(false);
+              
+              if (success) {
+                Alert.alert(
+                  '🎉 Parabéns!',
+                  'Sua assinatura Premium foi ativada!\n\nAgora você tem acesso completo a:\n• Rumo Operacional\n• Rumo Finance\n• Rumo Máquinas',
+                  [{ text: 'Começar', onPress: () => router.back() }]
+                );
+              } else {
+                Alert.alert('Erro', 'Falha ao processar pagamento. Tente novamente.');
+              }
+            }
+          },
+        ]
+      );
+    }, 1000);
   };
 
   return (
@@ -28,13 +79,31 @@ export default function SubscriptionScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Status atual */}
+        {isAuthenticated && (
+          <View style={[
+            styles.statusBanner,
+            isPremium ? styles.statusPremium : 
+            showPaymentRequired ? styles.statusExpired : styles.statusTrial
+          ]}>
+            <Crown size={20} color={colors.textLight} />
+            <Text style={styles.statusText}>
+              {isPremium 
+                ? '✨ Você é Premium!' 
+                : showPaymentRequired 
+                  ? '⚠️ Assinatura expirada'
+                  : `🕐 Trial: ${daysLeft} dias restantes`}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
             <Zap size={32} color={colors.accent} />
           </View>
-          <Text style={styles.heroTitle}>Agrofinance Premium</Text>
+          <Text style={styles.heroTitle}>Rumo Premium</Text>
           <Text style={styles.heroSubtitle}>
-            Gestão completa para sua propriedade rural
+            Uma assinatura, todos os apps integrados
           </Text>
         </View>
 
@@ -42,22 +111,48 @@ export default function SubscriptionScreen() {
         <View style={[styles.planCard, styles.planCardPopular]}>
           <View style={styles.popularBadge}>
             <Star size={12} color={colors.textLight} />
-            <Text style={styles.popularText}>Plano Completo</Text>
+            <Text style={styles.popularText}>Acesso Total</Text>
           </View>
 
           <View style={styles.planHeader}>
-            <Text style={styles.planName}>{plan.name}</Text>
+            <Text style={styles.planName}>Premium</Text>
             <View style={styles.planPricing}>
               <Text style={styles.planCurrency}>R$</Text>
-              <Text style={styles.planPrice}>
-                {plan.price.toFixed(2).replace('.', ',')}
-              </Text>
+              <Text style={styles.planPrice}>49,90</Text>
               <Text style={styles.planPeriod}>/mês</Text>
             </View>
           </View>
 
+          {/* Apps incluídos */}
+          <View style={styles.appsIncluded}>
+            <Text style={styles.appsTitle}>Apps incluídos:</Text>
+            <View style={styles.appsList}>
+              <View style={styles.appBadge}>
+                <Link2 size={12} color={colors.primary} />
+                <Text style={styles.appName}>Rumo Operacional</Text>
+              </View>
+              <View style={styles.appBadge}>
+                <Link2 size={12} color={colors.success} />
+                <Text style={styles.appName}>Rumo Finance</Text>
+              </View>
+              <View style={styles.appBadge}>
+                <Link2 size={12} color={colors.warning} />
+                <Text style={styles.appName}>Rumo Máquinas</Text>
+              </View>
+            </View>
+          </View>
+
           <View style={styles.planFeatures}>
-            {plan.features.map((feature, idx) => (
+            {[
+              'Lançamentos ilimitados',
+              'Relatórios avançados',
+              'Exportação PDF e Excel',
+              'Integração entre apps',
+              'Múltiplas fazendas',
+              'Equipe ilimitada',
+              'Suporte prioritário',
+              'Backup na nuvem',
+            ].map((feature, idx) => (
               <View key={idx} style={styles.featureRow}>
                 <View style={[styles.checkIcon, styles.checkIconPopular]}>
                   <Check size={14} color={colors.primary} />
@@ -68,12 +163,21 @@ export default function SubscriptionScreen() {
           </View>
 
           <TouchableOpacity 
-            style={[styles.planButton, styles.planButtonPopular]}
+            style={[
+              styles.planButton, 
+              styles.planButtonPopular,
+              (isPremium || isProcessing) && styles.planButtonDisabled
+            ]}
             onPress={handleSubscribe}
+            disabled={isPremium || isProcessing}
           >
-            <Text style={[styles.planButtonText, styles.planButtonTextPopular]}>
-              Assinar Agora
-            </Text>
+            {isProcessing ? (
+              <ActivityIndicator color={colors.textLight} size="small" />
+            ) : (
+              <Text style={[styles.planButtonText, styles.planButtonTextPopular]}>
+                {isPremium ? 'Assinatura Ativa ✓' : 'Assinar Agora'}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -89,6 +193,18 @@ export default function SubscriptionScreen() {
               <Text style={styles.benefitTitle}>Sem Limites</Text>
               <Text style={styles.benefitDescription}>
                 Cadastre quantos setores, operações e lançamentos precisar
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.benefitCard}>
+            <View style={styles.benefitIcon}>
+              <Link2 size={20} color={colors.primary} strokeWidth={1.5} />
+            </View>
+            <View style={styles.benefitContent}>
+              <Text style={styles.benefitTitle}>Integração Total</Text>
+              <Text style={styles.benefitDescription}>
+                Login único para Operacional, Finance e Máquinas
               </Text>
             </View>
           </View>
@@ -122,6 +238,13 @@ export default function SubscriptionScreen() {
           <Text style={styles.infoTitle}>Dúvidas frequentes</Text>
           
           <View style={styles.faqItem}>
+            <Text style={styles.faqQuestion}>A assinatura vale para todos os apps?</Text>
+            <Text style={styles.faqAnswer}>
+              Sim! Com uma única assinatura de R$49,90/mês você tem acesso completo ao Rumo Operacional, Rumo Finance e Rumo Máquinas.
+            </Text>
+          </View>
+
+          <View style={styles.faqItem}>
             <Text style={styles.faqQuestion}>Posso cancelar a qualquer momento?</Text>
             <Text style={styles.faqAnswer}>
               Sim! Você pode cancelar sua assinatura quando quiser, sem multas ou taxas adicionais.
@@ -131,14 +254,7 @@ export default function SubscriptionScreen() {
           <View style={styles.faqItem}>
             <Text style={styles.faqQuestion}>Como funciona o período de teste?</Text>
             <Text style={styles.faqAnswer}>
-              Oferecemos 14 dias de teste gratuito em todos os planos pagos. Você pode testar todas as funcionalidades antes de decidir.
-            </Text>
-          </View>
-
-          <View style={styles.faqItem}>
-            <Text style={styles.faqQuestion}>Posso mudar de plano depois?</Text>
-            <Text style={styles.faqAnswer}>
-              Claro! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. O valor será ajustado proporcionalmente.
+              Oferecemos 7 dias de teste gratuito com acesso a todos os recursos. Você pode testar tudo antes de decidir.
             </Text>
           </View>
         </View>
@@ -306,6 +422,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
+  planButtonDisabled: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+    opacity: 0.9,
+  },
   planButtonText: {
     fontSize: 16,
     fontWeight: '600',
@@ -385,5 +506,63 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 40,
+  },
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  statusTrial: {
+    backgroundColor: colors.primary,
+  },
+  statusPremium: {
+    backgroundColor: colors.success,
+  },
+  statusExpired: {
+    backgroundColor: colors.error,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textLight,
+  },
+  appsIncluded: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  appsTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 12,
+  },
+  appsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  appBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  appName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
   },
 });
