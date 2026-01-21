@@ -149,11 +149,73 @@ function WebLayout({ children }: { children: React.ReactNode }) {
 export default function TabLayout() {
   const { width } = useWindowDimensions();
   
-  // Detecta se é mobile baseado na largura da tela
+  // Detecta se é mobile baseado na largura da tela (< 768px)
   const isMobileWeb = Platform.OS === 'web' && width < MOBILE_BREAKPOINT;
   
+  // No mobile web, usar tabs na parte inferior igual ao app nativo
+  if (isMobileWeb) {
+    return (
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textMuted,
+          tabBarStyle: {
+            backgroundColor: colors.surface,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            paddingTop: 8,
+            paddingBottom: 12,
+            height: 65,
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '500',
+            letterSpacing: 0.2,
+          },
+        }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Início',
+            tabBarIcon: ({ color }) => <Home size={22} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="expenses"
+          options={{
+            title: 'Lançamentos',
+            tabBarIcon: ({ color }) => <FileText size={22} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="verification"
+          options={{
+            title: 'Verificação',
+            tabBarIcon: ({ color }) => <CheckCircle size={22} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="reports"
+          options={{
+            title: 'Relatórios',
+            tabBarIcon: ({ color }) => <BarChart3 size={22} color={color} strokeWidth={1.5} />,
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Config',
+            tabBarIcon: ({ color }) => <Settings size={22} color={color} strokeWidth={1.5} />,
+          }}
+        />
+      </Tabs>
+    );
+  }
+  
   // Na web DESKTOP, usar layout com sidebar
-  if (Platform.OS === 'web' && !isMobileWeb) {
+  if (Platform.OS === 'web') {
     return (
       <WebLayout>
         <Tabs
@@ -172,7 +234,7 @@ export default function TabLayout() {
     );
   }
   
-  // No mobile (app nativo OU web mobile), usar tabs na parte inferior
+  // No mobile nativo, usar tabs padrão
   return (
     <Tabs
       screenOptions={{
